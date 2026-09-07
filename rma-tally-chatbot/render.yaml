@@ -1,0 +1,52 @@
+databases:
+  - name: tally-chatbot-db
+    plan: free
+    region: singapore
+
+services:
+  # 1. Central API — FastAPI + Postgres. Tally agents yahan sync karte hain,
+  #    WhatsApp bot aur web dashboard dono yahan se query karte hain.
+  - type: web
+    name: tally-central-api
+    runtime: python
+    rootDir: central_api
+    plan: free
+    region: singapore
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: tally-chatbot-db
+          property: connectionString
+      - key: ANTHROPIC_API_KEY
+        sync: false          # Render dashboard me manually daalna hoga
+      - key: ALLOWED_ORIGINS
+        value: "*"           # Deploy ke baad web-dashboard ka actual URL daal dena, comma-separated
+
+  # 2. WhatsApp Bot — Maytapi webhook receiver, central API ko forward karta hai
+  - type: web
+    name: tally-whatsapp-bot
+    runtime: python
+    rootDir: whatsapp
+    plan: free
+    region: singapore
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn whatsapp_bot:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: CENTRAL_API_URL
+        sync: false          # tally-central-api deploy hone ke baad uska onrender.com URL yahan daalein
+      - key: MAYTAPI_PRODUCT_ID
+        sync: false
+      - key: MAYTAPI_PHONE_ID
+        sync: false
+      - key: MAYTAPI_TOKEN
+        sync: false
+
+  # 3. Web Dashboard — standalone static chat UI, FMS portal se alag
+  - type: web
+    name: tally-web-dashboard
+    runtime: static
+    rootDir: web_dashboard
+    buildCommand: echo "no build needed"
+    staticPublishPath: .

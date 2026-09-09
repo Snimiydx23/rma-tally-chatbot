@@ -1,0 +1,16 @@
+{
+  "name": "rma-tally-chatbot",
+  "version": "1.0.0",
+  "description": "RMA Finance — Tally Assistant Chatbot",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "build": "node --check server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@google/genai": "latest",
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  }
+}

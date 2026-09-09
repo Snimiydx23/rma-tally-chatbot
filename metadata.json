@@ -1,0 +1,8 @@
+{
+  "name": "RMA Finance — Tally Assistant",
+  "description": "TallyPrime multi-client chatbot assistant for accounting queries, ledgers, vouchers, and outstanding balances.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

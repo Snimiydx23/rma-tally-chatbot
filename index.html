@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RMA Finance — Tally Assistant</title>
+<meta name="description" content="TallyPrime multi-client chatbot assistant for accounting queries, ledgers, vouchers, and outstanding balances.">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
   body { background: #0f172a; height: 100vh; display: flex; flex-direction: column; }
@@ -11,7 +12,7 @@
   header h1 { font-size: 18px; font-weight: 600; }
   header select { background: #334155; color: #f1f5f9; border: none; padding: 8px 12px; border-radius: 6px; font-size: 14px; }
   #chat { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 12px; }
-  .msg { max-width: 70%; padding: 10px 14px; border-radius: 10px; line-height: 1.5; font-size: 14px; white-space: pre-wrap; }
+  .msg { max-width: 75%; padding: 10px 14px; border-radius: 10px; line-height: 1.5; font-size: 14px; white-space: pre-wrap; word-break: break-word; }
   .msg.user { align-self: flex-end; background: #2563eb; color: white; }
   .msg.bot { align-self: flex-start; background: #1e293b; color: #e2e8f0; border: 1px solid #334155; }
   .msg.bot.loading { color: #94a3b8; font-style: italic; }
@@ -21,7 +22,7 @@
   #inputBar button { background: #2563eb; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; }
   #inputBar button:hover { background: #1d4ed8; }
   #inputBar button:disabled { background: #334155; cursor: not-allowed; }
-  .hint { color: #64748b; font-size: 12px; padding: 0 24px 8px; }
+  .hint { color: #94a3b8; font-size: 12px; padding: 8px 24px; background: #131d31; border-bottom: 1px solid #1e293b; }
 </style>
 </head>
 <body>
@@ -60,7 +61,8 @@ function addMessage(text, sender, loading = false) {
 
 async function loadClients() {
   try {
-    const res = await fetch(`${CENTRAL_API_URL}/api/clients`);
+    const apiBase = typeof CENTRAL_API_URL !== 'undefined' && CENTRAL_API_URL ? CENTRAL_API_URL : window.location.origin;
+    const res = await fetch(`${apiBase}/api/clients`);
     const clients = await res.json();
     clients.forEach(c => {
       const opt = document.createElement('option');
@@ -83,7 +85,8 @@ async function sendQuery() {
   const loadingMsg = addMessage('Soch raha hoon...', 'bot', true);
 
   try {
-    const res = await fetch(`${CENTRAL_API_URL}/api/chat`, {
+    const apiBase = typeof CENTRAL_API_URL !== 'undefined' && CENTRAL_API_URL ? CENTRAL_API_URL : window.location.origin;
+    const res = await fetch(`${apiBase}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -94,6 +97,9 @@ async function sendQuery() {
     const data = await res.json();
     loadingMsg.remove();
     addMessage(data.answer || 'Koi jawab nahi mila.', 'bot');
+    if (data.client_id && !clientSelect.value) {
+      clientSelect.value = String(data.client_id);
+    }
   } catch (e) {
     loadingMsg.remove();
     addMessage('Server se connect nahi ho paaya: ' + e.message, 'bot');
